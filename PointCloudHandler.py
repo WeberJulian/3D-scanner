@@ -56,14 +56,13 @@ def rotate(cloud, ax, ay, az):
     Ry = np.array((((c, 0, s), (0, 1, 0), (-s, 0, c))))
     c, s = np.cos(az), np.sin(az)
     Rz = np.array((((c, -s, 0), (s, c, 0), (0, 0, 1))))
-    center = calculateCenter(cloud)
-    cloud2 = translate(cloud, center*-1)
+    cloud2 = translate(cloud, [0,0,0])
     for i in range(nbPoints):
-        point = np.matmul(Rx, coord(cloud[i]))
+        point = coord(cloud[i])
+        point = np.matmul(Rx, point)
         point = np.matmul(Ry, point)
         point = np.matmul(Rz, point)
-        cloud2[i] = [(point[0], point[1], point[2]), (cloud[i][1][0], cloud[i][1][1], cloud[i][1][2])]     
-    cloud2 = translate(cloud2, center)    
+        cloud[i] = [(point[0], point[1], point[2]), (cloud[i][1][0], cloud[i][1][1], cloud[i][1][2])]     
     return cloud2
 
 def calculateCenter(cloud):
@@ -78,3 +77,4 @@ def calculateCenter(cloud):
 
 def move(cloud, x, y, z, ax, ay, az):
     return translate(rotate(cloud,ax,ay,az), (x,y,z))
+
