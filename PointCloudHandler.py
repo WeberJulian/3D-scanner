@@ -56,14 +56,13 @@ def rotate(cloud, ax, ay, az):
     Ry = np.array((((c, 0, s), (0, 1, 0), (-s, 0, c))))
     c, s = np.cos(az), np.sin(az)
     Rz = np.array((((c, -s, 0), (s, c, 0), (0, 0, 1))))
-    cloud2 = translate(cloud, [0,0,0])
     for i in range(nbPoints):
         point = coord(cloud[i])
         point = np.matmul(Rx, point)
         point = np.matmul(Ry, point)
         point = np.matmul(Rz, point)
         cloud[i] = [(point[0], point[1], point[2]), (cloud[i][1][0], cloud[i][1][1], cloud[i][1][2])]     
-    return cloud2
+    return cloud
 
 def calculateCenter(cloud):
     avg = [0,0,0]
@@ -75,6 +74,18 @@ def calculateCenter(cloud):
     avg = np.array([avg[0]/nbPoints, avg[1]/nbPoints, avg[2]/nbPoints])
     return avg
 
-def move(cloud, x, y, z, ax, ay, az):
-    return translate(rotate(cloud,ax,ay,az), (x,y,z))
+def move(cloud, w):
+    x, y, z, ax, ay, az = w[0], w[1], w[2], w[3], w[4], w[5]
+    #return rotate(translate(cloud, (x,y,z)),ax,ay,az)
+    return translate(rotate(np.copy(cloud),ax,ay,az), (x,y,z))
+
+def evaluation(cloud, cloud2, every):
+    score = 0
+    for i in range(len(cloud2)):
+        for j in range(0, len(cloud), every):
+            score += dist(cloud[j][0],cloud2[i][0])*(dist(cloud[j][1],cloud2[i][1])/65025+1)
+    return score/every/10000
+
+def dist(u, v):
+    return (u[0]-v[0])*(u[0]-v[0])+(u[1]-v[1])*(u[1]-v[1])+(u[2]-v[2])*(u[2]-v[2])
 

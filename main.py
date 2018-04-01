@@ -13,19 +13,7 @@ Created on Thu Mar 15 14:19:38 2018
 import PointCloudHandler as pch
 import random as rd
 import numpy as np
-import time as ti
-
-
-def evaluation(cloud, cloud2, every):
-    score = 0
-    for i in range(len(cloud2)):
-        for j in range(0, len(cloud), every):
-            score += dist(cloud[j][0],cloud2[i][0])*dist(cloud[j][1],cloud2[i][1])
-    return score
-
-def dist(u, v):
-    return (u[0]-v[0])*(u[0]-v[0])+(u[1]-v[1])*(u[1]-v[1])+(u[2]-v[2])*(u[2]-v[2])
-
+import Optimization as opti
 
 def genererPave():
     cloud = []
@@ -35,11 +23,33 @@ def genererPave():
     return cloud
 
 # Generation du pavé
-time = ti.clock()
 cloud = genererPave()
-cloud2 = pch.move(cloud, 3, -4, 10, np.pi/2, np.pi/3, np.pi/3)
+# On crée un deuxième nuage qui est le résultat d'une transformation sur le premier
+cloud2 = pch.move(cloud, [-5, -2, -3, np.pi/8, np.pi/6, np.pi/7])
+
+# On écrit les deux nuages dans un fichier PLY
 text = pch.converter(cloud+cloud2)
-print(evaluation(cloud, cloud2, 8))
-file = open("file.ply", "w")
+file = open("input.ply", "w")
+file.write(text)
+file.close()
+
+#On initialise le vecteur translation
+w = [rd.random()/10,rd.random()/10,rd.random()/10,rd.random()/10,rd.random()/10,rd.random()/10]
+#Learning rate
+n = 0.1
+maxIteration = 50
+print("Situation initiale, distance : %f"%(pch.evaluation(cloud, cloud2, 100)))
+
+#On utilise la descente de gradiant pour essayer de superposer les nuages
+w = opti.gradiantDescent(w, n, 0.1, 100, cloud, cloud2, maxIteration)
+
+
+print("Situation finale, distance : %f"%(pch.evaluation(cloud, pch.move(cloud2,w), 100)))
+print(w)
+
+#On écrit la situation finale dans un PLY
+cloud2 = pch.move(cloud, w)
+text = pch.converter(cloud+cloud2)
+file = open("output.ply", "w")
 file.write(text)
 file.close()
